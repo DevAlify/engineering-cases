@@ -1,65 +1,69 @@
-# Automação de carreira: currículos com lastro e um agente sob medida
+# Agente de currículo sob medida, com revisão cruzada e lastro
 
 **PT** | [EN](#english)
 
 **Contexto:** projeto pessoal, 2026. Papel: autor.
-**Stack:** Python, Playwright, JSON Schema, Codex e Claude como modelos.
+**Stack:** Python, JSON Schema, Codex e Claude como modelos.
 **Evidência:** relato de projeto pessoal. O código é privado de propósito.
 
 ## Problema
 
-Manter vários currículos (por área e por idioma) e candidatar-se com consistência gera retrabalho e risco de inconsistência: o número que aparece em um PDF e não no outro, a resposta de formulário que contradiz o currículo. Quis tratar isso como um problema de engenharia: uma fonte de verdade e verificações automáticas.
+Adaptar um currículo a cada vaga com um LLM é fácil. Difícil é garantir que o texto não invente nada: um número que não existe, uma tecnologia que nunca usei, uma instrução escondida na vaga que o modelo obedece. Tratei como um problema de engenharia de IA: o modelo escreve, o código decide o que passa.
 
 ## Arquitetura
 
 ```mermaid
 flowchart LR
-  Y[YAML mestre<br/>fonte única] --> G[Gerador de currículos]
-  G --> ATS[Checagem ATS]
-  ATS --> PDF[PDFs por variante e idioma]
-  V[Vaga] --> TR[Triagem com bloqueios]
-  TR --> AG[Agente de currículo sob medida]
-  Y --> AG
-  AG --> RV[Revisão por outro modelo]
-  RV --> OUT[Saída estruturada]
-  OUT --> RT[Rotina de candidaturas<br/>Playwright]
-  RT --> REG[(Registro: nunca repete envio)]
+  Y[YAML mestre<br/>fonte única] --> G[Gerador de currículos<br/>+ checagem ATS]
+  V[Vaga] --> GU[Guard contra<br/>prompt injection]
+  GU --> D[Codex redige]
+  Y --> D
+  D --> S[Saída estruturada<br/>JSON Schema]
+  S --> L[Validação de lastro]
+  L --> R[Claude revisa]
+  R --> N{Nota mínima e<br/>cobertura de palavras-chave}
+  N -->|abaixo| E[Escala para modelo mais forte]
+  E --> D
+  N -->|ok| OUT[Currículo final]
+  D -. falha .-> FB[Fallback: currículo padrão]
 ```
 
 ## Decisões técnicas
 
-- **Uma fonte, vários currículos.** Um YAML mestre gera todas as variantes. Editar um lugar só evita divergência.
-- **Checagem ATS no gerador.** Uma coluna, texto extraível, 2 páginas e números com lastro: cada afirmação numérica aponta para uma fonte registrada no próprio YAML.
-- **Rotina diária com Playwright em 4 portais de vagas.** Triagem com bloqueios (critérios que impedem o envio), respostas de formulário com lastro nos dados do mestre e um registro que nunca repete um envio.
-- **Dois fornecedores de modelo.** No agente de currículo sob medida, um modelo redige e outro, de fornecedor diferente, revisa. A revisão cruzada reduz o ponto cego de um modelo só.
-- **Saída estruturada.** O resultado obedece a um JSON Schema.
-- **Guard contra prompt injection na vaga.** O texto da vaga é entrada não confiável e é tratado como dado.
-- **Cobertura de palavras-chave e nota mínima.** Se a nota fica abaixo do mínimo, o sistema escala para um modelo mais forte.
-- **Falha sem bloquear.** Um fallback garante que um erro do agente nunca impeça a candidatura de seguir com o currículo padrão.
+- **Dois fornecedores de modelo.** Um modelo redige e outro, de fornecedor diferente, revisa. A revisão cruzada reduz o ponto cego de um modelo só.
+- **Saída estruturada.** A resposta do modelo precisa obedecer a um JSON Schema; o que não valida, não segue.
+- **Validação de lastro.** Nenhum número ou termo fora do perfil mestre passa. Cada afirmação numérica aponta para uma fonte registrada no próprio YAML.
+- **Guard contra prompt injection.** O texto da vaga é entrada não confiável e é tratado como dado, nunca como instrução.
+- **Cobertura de palavras-chave e nota mínima.** Abaixo da nota mínima, o sistema escala para um modelo mais forte.
+- **Fallback que nunca bloqueia.** Se o agente falha, o fluxo segue com o currículo padrão em vez de parar.
+- **Evals com vagas reais.** Um conjunto de vagas reais mede o agente a cada mudança de prompt ou de modelo.
+- **Gerador de currículos com checagem ATS.** Um YAML mestre gera todas as variantes por área e idioma, com checagem de uma coluna, texto extraível e 2 páginas, e números com lastro.
+
+O agente é integrado a uma rotina pessoal de candidaturas.
 
 ## Números
 
-~186 testes. O restante é qualitativo: a fonte única e os bloqueios existem para impedir erros que antes dependiam de atenção.
+~186 testes. O restante é qualitativo: as regras existem para impedir erros que antes dependiam de atenção.
 
 ## O que aprendi
 
-"Número com lastro" é uma regra que cabe em código: se a afirmação não aponta para uma fonte, o gerador não a publica. E, em agente que escreve em meu nome, o importante é o que ele é impedido de fazer.
+"Número com lastro" é uma regra que cabe em código: se a afirmação não aponta para uma fonte, o sistema não a publica. Em agente que escreve em meu nome, o mais importante é o que ele é impedido de fazer.
 
 ## Limites
 
-Projeto pessoal, sem métrica de taxa de resposta. Detalhes de operação nos sites de vagas ficam de fora de propósito; este case trata da engenharia e do uso de IA.
+Projeto pessoal, sem métrica de taxa de resposta das candidaturas.
 
 ---
 
 ## English
 
 **Context:** personal project, 2026. Role: author.
-**Stack:** Python, Playwright, JSON Schema, Codex and Claude as models.
+**Stack:** Python, JSON Schema, Codex and Claude as models.
 **Evidence:** account of a personal project. The code is private on purpose.
 
 ### Problem
 
-Maintaining several resumes (per field and per language) and applying consistently creates rework and inconsistency risk: a number that shows in one PDF and not another, a form answer that contradicts the resume. I treated it as an engineering problem: one source of truth and automatic checks.
+Tailoring a resume to each job posting with an LLM is easy. The hard part is guaranteeing the text invents nothing: a number that does not exist, a technology I never used, an instruction hidden in the posting that the model obeys. I treated it as an AI engineering problem: the model writes, the code decides what gets through.
 
 ### Architecture
 
@@ -67,23 +71,25 @@ See the diagram above.
 
 ### Technical decisions
 
-- **One source, many resumes.** A master YAML generates every variant. Editing one place prevents drift.
-- **ATS check in the generator.** One column, extractable text, 2 pages, and numbers with backing: each numeric claim points to a source recorded in the YAML itself.
-- **Daily routine with Playwright across 4 job portals.** Screening with blockers (criteria that stop a submission), form answers grounded in the master data, and a log that never repeats a submission.
-- **Two model vendors.** In the tailored-resume agent, one model drafts and a model from a different vendor reviews. Cross-review reduces the blind spot of a single model.
-- **Structured output.** Results follow a JSON Schema.
-- **Prompt injection guard on the job posting.** Posting text is untrusted input and is handled as data.
-- **Keyword coverage and a minimum score.** If the score falls under the minimum, the system escalates to a stronger model.
-- **Failing without blocking.** A fallback ensures an agent error never stops an application from going out with the default resume.
+- **Two model vendors.** One model drafts and a model from a different vendor reviews. Cross-review reduces the blind spot of a single model.
+- **Structured output.** The model response must satisfy a JSON Schema; what does not validate does not proceed.
+- **Backing validation.** No number or term outside the master profile gets through. Each numeric claim points to a source recorded in the YAML itself.
+- **Prompt injection guard.** The posting text is untrusted input and is handled as data, never as instructions.
+- **Keyword coverage and a minimum score.** Below the minimum score, the system escalates to a stronger model.
+- **A fallback that never blocks.** If the agent fails, the flow continues with the default resume instead of stopping.
+- **Evals with real postings.** A set of real postings measures the agent on every prompt or model change.
+- **Resume generator with ATS check.** One master YAML generates every variant by field and language, checking single column, extractable text, 2 pages, and numbers with backing.
+
+The agent is integrated into a personal job-application routine.
 
 ### Numbers
 
-About 186 tests. The rest is qualitative: the single source and the blockers exist to prevent mistakes that used to depend on attention.
+About 186 tests. The rest is qualitative: the rules exist to prevent mistakes that used to depend on attention.
 
 ### What I learned
 
-"Numbers with backing" is a rule that fits in code: if a claim does not point to a source, the generator does not publish it. And for an agent that writes in my name, what matters most is what it is prevented from doing.
+"Numbers with backing" is a rule that fits in code: if a claim does not point to a source, the system does not publish it. For an agent that writes in my name, what matters most is what it is prevented from doing.
 
 ### Limits
 
-Personal project, no response-rate metric. Operational details about job sites are left out on purpose; this case is about engineering and the use of AI.
+Personal project, with no response-rate metric for applications.

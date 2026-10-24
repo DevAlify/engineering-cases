@@ -3,7 +3,7 @@
 **PT** | [EN](#english)
 
 **Contexto:** syphrax, desde setembro de 2026. Papel: cofundador e CTO, autor de cerca de 840 commits desde 26/09/2026.
-**Stack:** Next.js 16, React 19, TypeScript, PostgreSQL 17, Drizzle, pg-boss, Vitest, Playwright, Docker, Coolify, Traefik, Cloudflare.
+**Stack:** Next.js 16, React 19, TypeScript, PostgreSQL 17, pg-boss, Vitest, Playwright, Docker, Coolify, Traefik, Cloudflare.
 **Evidência:** relato do sistema que uso e mantenho. Código privado.
 
 ## Problema
@@ -17,7 +17,7 @@ flowchart LR
   U[Equipe] --> W[App Next.js 16]
   K[Cliente] --> PT[Portal do cliente]
   PT --> W
-  W --> DB[(PostgreSQL 17<br/>Drizzle)]
+  W --> DB[(PostgreSQL 17)]
   W --> Q[pg-boss<br/>13 jobs]
   Q --> DB
   Q --> I[Integrações:<br/>Asaas, Linear, GitHub, Cloudflare,<br/>Coolify, Resend, RDAP, WhatsApp]
@@ -61,7 +61,7 @@ Contagem de testes não é cobertura percentual, e não afirmo ganho de negócio
 ## English
 
 **Context:** syphrax, since September 2026. Role: co-founder and CTO, author of about 840 commits since 2026-09-26.
-**Stack:** Next.js 16, React 19, TypeScript, PostgreSQL 17, Drizzle, pg-boss, Vitest, Playwright, Docker, Coolify, Traefik, Cloudflare.
+**Stack:** Next.js 16, React 19, TypeScript, PostgreSQL 17, pg-boss, Vitest, Playwright, Docker, Coolify, Traefik, Cloudflare.
 **Evidence:** account of the system I run and maintain. Private code.
 
 ### Problem
